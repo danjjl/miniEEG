@@ -1,0 +1,26 @@
+#Normal execution
+Universe = vanilla
+
+RequestCpus    = 8
+RequestMemory  = 12G
++RequestWalltime = 3600
+
+#I'm a nice person, I think...
+NiceUser = true
+#Mail me only if something is wrong
+Notification = Error
+
+# The job will 'cd' to this directory before starting, be sure you can _write_ here.
+initialdir = /users/sista/jdan/miniEEG/
+# This is the executable or script I want to run
+executable = run.sh
+
+#Output of condors handling of the jobs, will be in 'initialdir'
+#Log          = condor/condor_bin$(Cluster).log
+#Output       = condor/condor_bin$(Cluster)-$(Process).out
+#Error        = condor/condor_bin$(Cluster)-$(Process).err
+
+
+# subject 
+arguments = $(a1) $(a2) $(a3)
+queue a1,a2,a3 from args.txt

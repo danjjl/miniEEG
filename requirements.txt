@@ -1,0 +1,10 @@
+blas
+matplotlib
+mne
+numba
+numpy
+openpyxl
+pandas
+pymc
+scikit-learn
+scipy
