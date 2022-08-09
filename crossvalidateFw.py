@@ -156,8 +156,8 @@ def crossValidate(params):
 
         lagged = spir.build_lagged_version(selectedData, params["lag"])
 
-        nOutTime = (v[:, :1].T @ lagged)
-        power = spir.rolling_rms(nOutTime[:1, :], params["lag"])
+        nOutTime = (v[:, :3].T @ lagged)
+        power = spir.rolling_rms(nOutTime[:3, :], params["lag"])
 
         # results["rss"] = rss
         # results["rnn"] = rnn
