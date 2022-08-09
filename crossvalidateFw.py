@@ -210,7 +210,11 @@ def crossValidate(params):
         yTest = ys[~selector]
         predictions_proba = iedDetector.predict(XTest)
         predictions_probaAll = iedDetector.predict(Xs)
+        fs10 = (1.0/10)
+        x10 = spir.downsample(predictions_proba.reshape(1, len(predictions_proba)), int(params["fsClassify"] / fs10))[0]
+        y10 = spir.downsample(yTest.reshape(1, len(yTest)), int(params["fsClassify"] / fs10))[0]
         auc = roc_auc_score(yTest, predictions_proba)
+        auc10 = roc_auc_score(y10, x10)
         for t in [0.5, 0.6, 0.7, 0.8, 0.9]:
             threshold = iedDetector.findThreshold(predictions_proba, yTest, t)
             predictions = (predictions_proba >= threshold).astype(bool)
@@ -222,8 +226,13 @@ def crossValidate(params):
             predictionsAll = (predictions_probaAll >= threshold).astype(bool)
             events1 = list(np.array(np.where(~selector*predictionsAll)[0])/params['fsClassify'])
             events2 = list(np.array(np.where(~selector*ys)[0])/params['fsClassify'])
-            results["cor-{}".format(t)] = spir.correlationAvgEvents(selectedData, events1, events2, 0.25, params['fs'])
+            results["cor-{}".format(t)] = spir.correlationAvgEvents(selectedData, events1, events2, 0.35, params['fs'])
+            
+            t10 = iedDetector.findThreshold(x10, y10, t)
+            pred10 = (x10 >= t10).astype(bool)
+            results["cohenKappa10-{}".format(t)] = cohen_kappa_score(y10, pred10)
         results["auc"] = auc
+        results["auc10"] = auc10
         results["ied"] = iedDetector
 
 
