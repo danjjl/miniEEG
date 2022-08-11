@@ -8,3 +8,4 @@ pandas
 pymc
 scikit-learn
 scipy
+tikzplotlib
