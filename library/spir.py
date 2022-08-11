@@ -251,22 +251,30 @@ def downsample(values, factor):
 
 
 def correlationAvgEvents(data, events1, events2, duration, fs):
-    avgEvents = list()
+    avgEventsCh = []
     for i, events in enumerate([events1, events2]):
-        avgEvents.append([])
-        for event in events:
+        avgEventsCh.append(np.zeros((len(events),len(data),int(duration*fs))))
+        eventList = []
+        for j, event in enumerate(events):
             i0 = int((event - duration/2)*fs)
             i1 = i0 + int(duration*fs)
             if i0 < 0 or i1 > data.shape[1]:
                 continue
             imax = np.argmax(np.max(np.abs(data[:,i0:i1]), axis=0))-int(duration/2*fs)
-            if i1 + imax > data.shape[1]:
+            if i1+imax > selectedData.shape[1]:
                 continue
-            avgEvents[i].append(data[:, i0+imax:i1+imax].flatten())
-        avgEvents[i] = np.mean(avgEvents[i], axis=0)
-    return np.corrcoef(avgEvents[0], avgEvents[1], rowvar=False)[0, 1]
-    
+            avgEventsCh[i][j, :, :] = data[:, i0+imax:i1+imax]
+            eventList.append([(i0+imax)/fs, (i1+imax)/fs])
 
+    for i, events in enumerate([events1, events2]):
+        avgEventsCh[i] = avgEventsCh[i].mean(axis=0)
+
+    cor = list()
+    weight = list()
+    for i in range(len(data)):
+        cor.append(np.corrcoef(avgEventsCh[0][i], avgEventsCh[1][i], rowvar=False)[0, 1])
+        weight.append(np.sqrt(np.mean(avgEventsCh[1][i]**2)))
+    return np.average(cor, weights=weight)
 
 # ## SPIR ###
 
