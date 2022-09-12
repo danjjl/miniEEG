@@ -156,8 +156,8 @@ def crossValidate(params):
 
         lagged = spir.build_lagged_version(selectedData, params["lag"])
 
-        nOutTime = (v[:, :3].T @ lagged)
-        power = spir.rolling_rms(nOutTime[:3, :], params["lag"])
+        nOutTime = (v[:, :1].T @ lagged)
+        power = spir.rolling_rms(nOutTime[:1, :], params["lag"])
 
         # results["rss"] = rss
         # results["rnn"] = rnn
@@ -206,6 +206,15 @@ def crossValidate(params):
         iedDetector.fit(XTrain, yTrain)
 
         # Test
+        
+        # Load baseline
+        with open(os.path.join(params["BASELINESAVE"],
+                               "simulation-{}.pkl".format(params["dataFiles"]["subject"])),
+                  "rb") as file:
+            resultsBase = pickle.load(file)
+            predBaseline = resultsBase['results']['predictions'][~selector]
+            predProbaBaseline = resultsBase['results']['predictions_proba'][~selector]
+        
         XTest = Xs[~selector]
         yTest = ys[~selector]
         predictions_proba = iedDetector.predict(XTest)
@@ -215,24 +224,29 @@ def crossValidate(params):
         y10 = spir.downsample(yTest.reshape(1, len(yTest)), int(params["fsClassify"] / fs10))[0]
         auc = roc_auc_score(yTest, predictions_proba)
         auc10 = roc_auc_score(y10, x10)
+        aucBaseline = roc_auc_score(predBaseline, predictions_proba)
         for t in [0.5, 0.6, 0.7, 0.8, 0.9]:
             threshold = iedDetector.findThreshold(predictions_proba, yTest, t)
             predictions = (predictions_proba >= threshold).astype(bool)
-            fp = np.sum(np.logical_and(predictions, yTest == 0))
+            thresBaseline = iedDetector.findThreshold(predProbaBaseline, yTest, t)
+            predBaseline = (predProbaBaseline >= thresBaseline).astype(bool)
             results["threshold-{}".format(t)] = threshold
-            results["fp-{}".format(t)] = fp
+            results["fp-{}".format(t)] = np.sum(np.logical_and(predictions, yTest == 0))
+            results["fpBaseline-{}".format(t)] = np.sum(np.logical_and(predBaseline, yTest == 0))
+            results["fpToBaseline-{}".format(t)] = np.sum(np.logical_and(predictions, predBaseline == 0))
             results["f1-{}".format(t)] = f1_score(yTest, predictions)
             results["cohenKappa-{}".format(t)] = cohen_kappa_score(yTest, predictions)
+            results["cohenKappaBaseline-{}".format(t)] = cohen_kappa_score(predBaseline, predictions)
             predictionsAll = (predictions_probaAll >= threshold).astype(bool)
             events1 = list(np.array(np.where(~selector*predictionsAll)[0])/params['fsClassify'])
             events2 = list(np.array(np.where(~selector*ys)[0])/params['fsClassify'])
             results["cor-{}".format(t)] = spir.correlationAvgEvents(selectedData, events1, events2, 0.35, params['fs'])
-            
             t10 = iedDetector.findThreshold(x10, y10, t)
             pred10 = (x10 >= t10).astype(bool)
             results["cohenKappa10-{}".format(t)] = cohen_kappa_score(y10, pred10)
         results["auc"] = auc
         results["auc10"] = auc10
+        results["aucBaseline"] = aucBaseline
         results["ied"] = iedDetector
 
 

@@ -50,6 +50,9 @@ if __name__ == '__main__':
     params['BASESAVE'] = os.path.join(params["dataFiles"]["ROOT"],
                                       params['BASESAVE'],
                                       params["dataFiles"]["subject"])
+    params['BASELINESAVE'] = "base"
+    params['BASELINESAVE'] = os.path.join(params["dataFiles"]["ROOT"],
+                                      params['BASELINESAVE'])
 
     for numNodes in range(params["numNodes"]):
         path = os.path.join(params['BASESAVE'], str(numNodes+1))

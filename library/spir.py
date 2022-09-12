@@ -261,7 +261,7 @@ def correlationAvgEvents(data, events1, events2, duration, fs):
             if i0 < 0 or i1 > data.shape[1]:
                 continue
             imax = np.argmax(np.max(np.abs(data[:,i0:i1]), axis=0))-int(duration/2*fs)
-            if i1+imax > selectedData.shape[1]:
+            if i1+imax > data.shape[1]:
                 continue
             avgEventsCh[i][j, :, :] = data[:, i0+imax:i1+imax]
             eventList.append([(i0+imax)/fs, (i1+imax)/fs])
